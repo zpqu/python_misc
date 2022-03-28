@@ -2,7 +2,13 @@
 
 This folder includes misc python scripts in bioinformatics analyses.
 
-++ blast_coverage.py: this script will calculate the total coverage of a blast alignment in query and subject.
+++ blastx_coverage_best.py: this script will calculate the total coverage of a blastx alignment in query and subject and output the best hit (longest alignment).
+
+++ blastx_coverage_all.py: this script will calculate the total coverage of a blastx alignment in query and subject and output all hits.
+
+++ blastn_coverage_best.py: this script will calculate the total coverage of a blastn alignment in query and subject and output the best hit (longest alignment).
+
+++ blastn_coverage_all.py: this script will calculate the total coverage of a blastn alignment in query and subject and output all hits.
 
 ++ format_links.py: this script will format collinear links for WGD to bed format used by circlize.
 

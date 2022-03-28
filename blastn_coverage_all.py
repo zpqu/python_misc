@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 """
-blast_coverage.py: Calculate the coverage of blast alignment in query and subject.
+blastn_coverage.py: Calculate the coverage of blastn alignment in query and subject.
 Author: Zhipeng Qu
 Date: 30/11/2021
 """
@@ -14,6 +14,7 @@ import re
 # subject: the subject fasta file used to calcualte subject length
 # input: tab delimited file from blast result using -outfmt 6
 # output: tab delimited file with query and subject coverage information added
+#         for all hits
 parser = argparse.ArgumentParser(description = "Calculate the blast alignment coverage")
 parser.add_argument('query', help = 'Fasta file including all query sequences.')
 parser.add_argument('subject', help = 'Fasta file including all subject sequences.')
@@ -64,8 +65,8 @@ subjects = fasta_parser(subject_fa)
 # were included: Step 1, multiple hsps from the same subject hits will be 
 # merged based on following criteria: gaps in query hsps < 50 (nt) and gaps 
 # in subject hsps < 10 (aa). Each subject hit will have one final merged 
-# hsps and stored in a list "merged_blast". Step 2, Hit with the longest 
-# alignment in subject for each query will be identified and put in output.
+# hsps and stored in a list "merged_blast". Step 2, Calculate coverages of
+# hits and put in output.
 with open(in_name, 'r') as in_file, open(out_name, 'w') as out_file:
 
     # Step 1, merge hsps for the same subject
@@ -97,7 +98,7 @@ with open(in_name, 'r') as in_file, open(out_name, 'w') as out_file:
             
             # Merge hsps if their are multiple
             if qid == qid_base and sid == sid_base:
-                if (qstart - qend_base) < 50 and (sstart - send_base) < 10:
+                if (qstart - qend_base) < 50 and (sstart - send_base) < 50:
                     qstart_base = min(qstart_base, qstart)
                     qend_base = max(qend_base, qend)
                     sstart_base = min(sstart_base, sstart)
@@ -130,64 +131,18 @@ with open(in_name, 'r') as in_file, open(out_name, 'w') as out_file:
     # Step 2, find the longest subject alignment for each query
     qname_base = ""
     for hit_list in merged_blast:
+        qname = hit_list[0]
+        sname = hit_list[1]
+        qStart = hit_list[2]
+        qEnd = hit_list[3]
+        qLen = qEnd - qStart
+        sStart = hit_list[4]
+        sEnd = hit_list[5]
+        sLen = sEnd - sStart
+        qCov = round(qLen/len(querys.get(qname))*100, 2)
+        sCov = round(sLen/len(subjects.get(sname))*100, 2)
 
-        if qname_base == "":
-            qname_base = hit_list[0]
-            sname_base = hit_list[1]
-            qStart_base = hit_list[2]
-            qEnd_base = hit_list[3]
-            qLen_base = qEnd_base - qStart_base
-            sStart_base = hit_list[4]
-            sEnd_base = hit_list[5]
-            sLen_base = sEnd_base - sStart_base
-
-            # Calculate query and subject alignment coverage
-            qCov_base = round(qLen_base/len(querys.get(qname_base))*100, 2)
-            sCov_base = round(sLen_base/len(subjects.get(sname_base))*100, 2)
-        else:
-            qname = hit_list[0]
-            sname = hit_list[1]
-            qStart = hit_list[2]
-            qEnd = hit_list[3]
-            qLen = qEnd - qStart
-            sStart = hit_list[4]
-            sEnd = hit_list[5]
-            sLen = sEnd - sStart
-            qCov = round(qLen/len(querys.get(qname))*100, 2)
-            sCov = round(sLen/len(subjects.get(sname))*100, 2)
-            if qname == qname_base: # processing when there are multiple subjects
-                if sLen > sLen_base: # change base value if longer alignment
-                    qname_base = qname
-                    sname_base = sname
-                    qStart_base = qStart
-                    qEnd_base = qEnd
-                    qLen_base = qLen
-                    sStart_base = sStart
-                    sEnd_base = sEnd
-                    sLen_base = sLen
-                    qCov_base = qCov
-                    sCov_base = sCov
-            else:
-                # Write longest alignment into output
-                out_line = [qname_base, sname_base, qStart_base, qEnd_base, qLen_base,
-                    qCov_base, sStart_base, sEnd_base, sLen_base, sCov_base]
-                out_file.write('\t'.join(str(v) for v in out_line))
-                out_file.write('\n')
-
-                # Reset base values
-                qname_base = qname
-                sname_base = sname
-                qStart_base = qStart
-                qEnd_base = qEnd
-                qLen_base = qLen
-                sStart_base = sStart
-                sEnd_base = sEnd
-                sLen_base = sLen
-                qCov_base = qCov
-                sCov_base = sCov
-
-    # Write last item into output
-    out_line = [qname_base, sname_base, qStart_base, qEnd_base, qLen_base,
-            qCov_base, sStart_base, sEnd_base, sLen_base, sCov_base]
-    out_file.write('\t'.join(str(v) for v in out_line))
-    out_file.write('\n')
+        out_line = [qname, sname, qStart, qEnd, qLen,
+            qCov, sStart, sEnd, sLen, sCov]
+        out_file.write('\t'.join(str(v) for v in out_line))
+        out_file.write('\n')
