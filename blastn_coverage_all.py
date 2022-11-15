@@ -47,6 +47,7 @@ def fasta_parser(fasta):
             line = line.rstrip() # remove last character
             if line.startswith('>'):
                 if header != "":
+                    header = header.split(' ', 1)[0] # capture non-space as header
                     fa_dict[header] = sequence
                 header = line.lstrip('>') # remove '>' in header
                 sequence = ""
