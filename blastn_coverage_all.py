@@ -55,6 +55,7 @@ def fasta_parser(fasta):
                 sequence += line
 
         # add last sequence into dictory
+        header = header.split(' ', 1)[0] # capture non-space as header
         fa_dict[header] = sequence
     return fa_dict
 
